@@ -3,6 +3,7 @@
 namespace App\Http\Middleware;
 
 use App\Models\User;
+use Carbon\CarbonImmutable;
 use Closure;
 use Illuminate\Http\Request;
 use Lcobucci\JWT\Token;
@@ -30,6 +31,13 @@ class EnsureJwtTokenIsValid
             }
 
             if (! ($parsedToken = $jwt->parse($token)) instanceof Token) {
+                return \response(null, 401);
+            }
+
+            if (
+                $parsedToken->isExpired(CarbonImmutable::now())
+                || ! $parsedToken->hasBeenIssuedBy(config('app.url'))
+            ) {
                 return \response(null, 401);
             }
 

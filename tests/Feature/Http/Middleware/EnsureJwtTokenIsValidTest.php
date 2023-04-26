@@ -4,6 +4,7 @@ namespace Tests\Feature\Http\Middleware;
 
 use App\Http\Middleware\EnsureJwtTokenIsValid;
 use App\Models\User;
+use Carbon\CarbonImmutable;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Foundation\Testing\WithFaker;
 use Illuminate\Http\Request;
@@ -36,6 +37,19 @@ class EnsureJwtTokenIsValidTest extends TestCase
         $request->headers->add([
             'Authorization' => 'Bearer an.invalid.token',
         ]);
+
+        $this->assertSame(401, $this->callMiddleware($request)->status());
+    }
+
+    public function test_the_request_is_unauthorized_if_the_token_is_stale()
+    {
+        $token = app('jwt')
+            ->expiresAt(CarbonImmutable::now()->subHour(1))
+            ->token()
+            ->toString();
+
+        $request = new Request();
+        $request->headers->add(['Authorization' => 'Bearer '.$token]);
 
         $this->assertSame(401, $this->callMiddleware($request)->status());
     }
