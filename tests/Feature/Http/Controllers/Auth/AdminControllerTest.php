@@ -51,4 +51,26 @@ class AdminControllerTest extends TestCase
         ->assertStatus(422)
         ->assertJsonValidationErrors(['email']);
     }
+
+    public function test_an_admin_user_can_register_with_valid_data()
+    {
+        $this->postJson(route('v1.admin.registration'), [
+            'first_name' => fake()->firstName,
+            'last_name' => fake()->lastName,
+            'email' => fake()->unique()->safeEmail,
+            'password' => 'password',
+            'password_confirmation' => 'password',
+            'avatar' => fake()->uuid,
+            'address' => fake()->address,
+            'phone_number' => fake()->phoneNumber,
+            'is_marketing' => 0,
+        ])
+        ->assertStatus(200)
+        ->assertJsonPath(
+            'data.token',
+            fn (string $token) => str_starts_with($token, 'eyJ')
+        );
+
+        $this->assertDatabaseHas('users', ['is_admin' => 1]);
+    }
 }

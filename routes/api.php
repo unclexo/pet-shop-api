@@ -22,4 +22,7 @@ use Illuminate\Support\Facades\Route;
 Route::prefix('v1/admin')
     ->controller(AdminController::class)->group(function () {
         Route::post('login', 'login')->name('v1.admin.login');
+
+        Route::post('create', 'register')
+            ->name('v1.admin.registration');
 });
