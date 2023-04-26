@@ -7,6 +7,7 @@ use App\Services\Token\JwtTokenService;
 use Carbon\CarbonImmutable;
 use Lcobucci\JWT\Signer\Rsa\Sha256;
 use Lcobucci\JWT\Token;
+use Lcobucci\JWT\Token\InvalidTokenStructure;
 use Lcobucci\JWT\Validation\Constraint\IssuedBy;
 use Lcobucci\JWT\Validation\Constraint\SignedWith;
 use Tests\TestCase;
@@ -29,6 +30,22 @@ class JwtTokenServiceTest extends TestCase
         $this->assertInstanceOf(
             Token::class,
             app('jwt')->parse(app('jwt')->token()->toString())
+        );
+    }
+
+    public function test_it_can_raise_exception_for_a_invalid_token()
+    {
+        $this->withoutExceptionHandling();
+
+        $this->expectException(InvalidTokenStructure::class);
+
+        app('jwt')->parse('');
+        app('jwt')->parse('invalid token given');
+        app('jwt')->parse('invalid.token given');
+
+        $this->assertNotInstanceOf(
+            Token::class,
+            app('jwt')->parse('a invalid token')
         );
     }
 
