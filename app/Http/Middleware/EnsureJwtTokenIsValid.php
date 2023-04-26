@@ -41,7 +41,7 @@ class EnsureJwtTokenIsValid
                 return \response(null, 401);
             }
 
-            if (!$user = User::where(
+            if (! $user = User::where(
                     'uuid',
                     $parsedToken->claims()->get('user_uuid')
                 )->first()

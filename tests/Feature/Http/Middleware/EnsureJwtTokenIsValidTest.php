@@ -54,6 +54,19 @@ class EnsureJwtTokenIsValidTest extends TestCase
         $this->assertSame(401, $this->callMiddleware($request)->status());
     }
 
+    public function test_request_is_unauthorized_if_token_has_been_issued_by_others()
+    {
+        $token = app('jwt')
+            ->issuedBy('test_issuer')
+            ->token()
+            ->toString();
+
+        $request = new Request();
+        $request->headers->add(['Authorization' => 'Bearer '.$token]);
+
+        $this->assertSame(401, $this->callMiddleware($request)->status());
+    }
+
     public function test_the_request_is_authorized_if_token_is_valid()
     {
         $user = User::factory()->create();
