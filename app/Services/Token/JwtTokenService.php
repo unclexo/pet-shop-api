@@ -11,6 +11,7 @@ use Lcobucci\JWT\Signer\Hmac\Sha256;
 use Lcobucci\JWT\Signer\Key\InMemory;
 use Lcobucci\JWT\Token;
 use Lcobucci\JWT\Token\Builder;
+use Lcobucci\JWT\Token\Parser;
 
 class JwtTokenService implements Tokenable
 {
@@ -47,7 +48,9 @@ class JwtTokenService implements Tokenable
 
     public function parse(string $token): Token
     {
-        // TODO: Implement parse() method.
+        $parser = new Parser(new JoseEncoder());
+
+        return $parser->parse($token);
     }
 
     public function validate(string $token): bool

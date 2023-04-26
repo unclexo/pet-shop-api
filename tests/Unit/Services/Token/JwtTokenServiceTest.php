@@ -19,4 +19,12 @@ class JwtTokenServiceTest extends TestCase
         $this->assertInstanceOf(Token::class, $token = app('jwt')->token());
         $this->assertTrue(str_starts_with($token->toString(), 'eyJ'));
     }
+
+    public function test_it_can_parse_a_given_token()
+    {
+        $this->assertInstanceOf(
+            Token::class,
+            app('jwt')->parse(app('jwt')->token()->toString())
+        );
+    }
 }
