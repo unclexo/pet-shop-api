@@ -4,6 +4,7 @@ namespace Tests\Unit\Services\Token;
 
 
 use App\Services\Token\JwtTokenService;
+use Carbon\CarbonImmutable;
 use Lcobucci\JWT\Token;
 use Tests\TestCase;
 
@@ -33,5 +34,26 @@ class JwtTokenServiceTest extends TestCase
         $this->assertTrue(app('jwt')->validate(
             app('jwt')->token()->toString()
         ));
+    }
+
+    public function test_it_can_construct_a_token_with_given_criteria()
+    {
+        $issuedBy = 'test_issue';
+        $withClaim = ['uid' => 123];
+        $expiresAt = CarbonImmutable::now()->addHours(3);
+
+        $token = (new JwtTokenService(
+            $issuedBy,
+            $withClaim,
+            $expiresAt,
+        ))->token();
+
+        $this->assertInstanceOf(Token::class, $token);
+
+        $this->assertTrue($token->hasBeenIssuedBy($issuedBy));
+
+        $this->assertSame(123, $token->claims()->get('uid'));
+
+        $this->assertFalse($token->isExpired(now()->addMinutes(179)));
     }
 }
