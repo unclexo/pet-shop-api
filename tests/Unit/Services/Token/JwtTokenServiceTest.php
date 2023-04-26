@@ -56,4 +56,24 @@ class JwtTokenServiceTest extends TestCase
 
         $this->assertFalse($token->isExpired(now()->addMinutes(179)));
     }
+
+    public function test_it_can_construct_a_jwt_token_via_methods_chain()
+    {
+        $issuedBy = 'test_issue';
+        $expiresAt = CarbonImmutable::now()->addHours(3);
+
+        $token = app('jwt')
+            ->issuedBy($issuedBy)
+            ->claimWith('uid', 123)
+            ->expiresAt($expiresAt)
+            ->token();
+
+        $this->assertInstanceOf(Token::class, $token);
+
+        $this->assertTrue($token->hasBeenIssuedBy($issuedBy));
+
+        $this->assertSame(123, $token->claims()->get('uid'));
+
+        $this->assertFalse($token->isExpired(now()->addMinutes(179)));
+    }
 }

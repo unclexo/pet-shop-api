@@ -42,17 +42,23 @@ class JwtTokenService implements Tokenable
 
     public function issuedBy(string $issuer): Tokenable
     {
-        // TODO: Implement issuedBy() method.
+        $this->issuedBy = $issuer;
+
+        return $this;
     }
 
     public function claimWith(string $name, mixed $value): Tokenable
     {
-        // TODO: Implement claimWith() method.
+        $this->withClaim[$name] = $value;
+
+        return $this;
     }
 
     public function expiresAt(DateTimeImmutable $expiration): Tokenable
     {
-        // TODO: Implement expiresAt() method.
+        $this->expiresAt = $expiration;
+
+        return $this;
     }
 
     public function token(): Token
