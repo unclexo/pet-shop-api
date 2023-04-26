@@ -140,7 +140,7 @@ class JwtTokenService implements Tokenable
     {
         $tokenBuilder = $this->configuration->builder()
             ->issuedBy($this->issuedBy)
-            ->expiresAt($this->expiresAt);
+            ->expiresAt($this->validateExpirationDateAndTime($this->expiresAt));
 
         foreach ($this->withClaim as $key => $value) {
             if (! is_string($key) || ! $value) {
@@ -156,6 +156,12 @@ class JwtTokenService implements Tokenable
             $this->configuration->signer(),
             $this->configuration->signingKey()
         );
+    }
+
+    private function validateExpirationDateAndTime(DateTimeImmutable $expiration) {
+        $now = CarbonImmutable::now();
+
+        return $expiration < $now ? $now->addHour(1) : $expiration;
     }
 
     public function parse(string $token): Token
