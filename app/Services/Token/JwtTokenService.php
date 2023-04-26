@@ -6,17 +6,18 @@ namespace App\Services\Token;
 
 use Carbon\CarbonImmutable;
 use DateTimeImmutable;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use InvalidArgumentException;
-use Lcobucci\JWT\Encoding\ChainedFormatter;
+use Lcobucci\JWT\Configuration;
 use Lcobucci\JWT\Encoding\JoseEncoder;
-use Lcobucci\JWT\Signer\Hmac\Sha256;
+use Lcobucci\JWT\Signer;
+use Lcobucci\JWT\Signer\Key;
 use Lcobucci\JWT\Signer\Key\InMemory;
+use Lcobucci\JWT\Signer\Rsa\Sha256;
 use Lcobucci\JWT\Token;
-use Lcobucci\JWT\Token\Builder;
 use Lcobucci\JWT\Token\Parser;
-use Lcobucci\JWT\Validation\Constraint\IssuedBy;
-use Lcobucci\JWT\Validation\Validator;
+use Lcobucci\JWT\Validation\Constraint\SignedWith;
 
 class JwtTokenService implements Tokenable
 {
@@ -26,10 +27,30 @@ class JwtTokenService implements Tokenable
 
     private DateTimeImmutable $expiresAt;
 
+    private Signer $signer;
+
+    private Key $privateSigningKey;
+
+    private Key $verificationKey;
+
+    private Configuration $configuration;
+
+    private array $validationConstraints = [];
+
+    private static Key $publicSigningKey;
+
+    public static function publicSigningKey(): Key
+    {
+        return self::$publicSigningKey = InMemory::file(
+            Storage::path(env('JWT_TOKEN_PUBLIC_KEY_PATH'))
+        );
+    }
+
     public function __construct(
         string $issuedBy = null,
         array $withClaim = [],
-        DateTimeImmutable $expiresAt = null
+        DateTimeImmutable $expiresAt = null,
+        array $validationConstraints = []
     ) {
         $this->issuedBy = $issuedBy ?? config('app.url');
 
@@ -38,6 +59,26 @@ class JwtTokenService implements Tokenable
             : ['unique_id' => Str::random(21)];
 
         $this->expiresAt = $expiresAt ?? CarbonImmutable::now()->addHour(2);
+
+        $this->signer = new Sha256();
+
+        $this->privateSigningKey = InMemory::file(Storage::path(
+            env('JWT_TOKEN_PRIVATE_KEY_PATH')
+        ));
+
+        $this->verificationKey = InMemory::base64Encoded(
+            substr(config('app.key'), 7)
+        );
+
+        $this->configuration = Configuration::forAsymmetricSigner(
+            $this->signer,
+            $this->privateSigningKey,
+            $this->verificationKey,
+        );
+
+        if (count($validationConstraints) > 0) {
+            $this->validationConstraints = $validationConstraints;
+        }
     }
 
     public function issuedBy(string $issuer): Tokenable
@@ -61,13 +102,16 @@ class JwtTokenService implements Tokenable
         return $this;
     }
 
+    public function configureValidationConstraints(array $constraints): Tokenable
+    {
+        $this->validationConstraints = $constraints;
+
+        return $this;
+    }
+
     public function token(): Token
     {
-        $tokenBuilder = (new Builder(new JoseEncoder(), ChainedFormatter::default()));
-        $algorithm    = new Sha256();
-        $signingKey   = InMemory::plainText(random_bytes(32));
-
-        $tokenBuilder = $tokenBuilder
+        $tokenBuilder = $this->configuration->builder()
             ->issuedBy($this->issuedBy)
             ->expiresAt($this->expiresAt);
 
@@ -81,7 +125,10 @@ class JwtTokenService implements Tokenable
             $tokenBuilder = $tokenBuilder->withClaim($key, $value);
         }
 
-        return $tokenBuilder->getToken($algorithm, $signingKey);
+        return $tokenBuilder->getToken(
+            $this->configuration->signer(),
+            $this->configuration->signingKey()
+        );
     }
 
     public function parse(string $token): Token
@@ -93,20 +140,25 @@ class JwtTokenService implements Tokenable
 
     public function validate(string $token): bool
     {
-        $parser = new Parser(new JoseEncoder());
+        (count($this->validationConstraints) === 0)
+            ? $this->validationConstraints =
+            $this->setDefaultValidationConstraints()
+            : $this->validationConstraints;
 
-        $token = $parser->parse($token);
+        $this->configuration->setValidationConstraints(
+            ...$this->validationConstraints
+        );
 
-        $validator = new Validator();
+        return $this->configuration->validator()->validate(
+            $this->parse($token),
+            ...$this->configuration->validationConstraints()
+        );
+    }
 
-        if ($token->isExpired(now())) {
-            return false;
-        }
-
-        if (! $validator->validate($token, new IssuedBy($this->issuedBy))) {
-            return false;
-        }
-
-        return true;
+    private function setDefaultValidationConstraints()
+    {
+        return [
+            new SignedWith($this->signer, self::publicSigningKey())
+        ];
     }
 }

@@ -5,7 +5,10 @@ namespace Tests\Unit\Services\Token;
 
 use App\Services\Token\JwtTokenService;
 use Carbon\CarbonImmutable;
+use Lcobucci\JWT\Signer\Rsa\Sha256;
 use Lcobucci\JWT\Token;
+use Lcobucci\JWT\Validation\Constraint\IssuedBy;
+use Lcobucci\JWT\Validation\Constraint\SignedWith;
 use Tests\TestCase;
 
 class JwtTokenServiceTest extends TestCase
@@ -75,5 +78,35 @@ class JwtTokenServiceTest extends TestCase
         $this->assertSame(123, $token->claims()->get('uid'));
 
         $this->assertFalse($token->isExpired(now()->addMinutes(179)));
+    }
+
+    public function test_it_users_asymmetric_algorithm_by_default()
+    {
+        $issuedBy = 'test_issuer';
+
+        $jwt = app('jwt')
+            ->issuedBy($issuedBy)
+            ->configureValidationConstraints([
+                new IssuedBy($issuedBy),
+                new SignedWith(
+                    new Sha256(),
+                    JwtTokenService::publicSigningKey()
+                ),
+            ]);
+
+        $this->assertTrue($jwt->validate(
+            app('jwt')
+                ->issuedBy($issuedBy)
+                ->token()
+                ->toString()
+        ));
+
+        $this->assertFalse($jwt->validate(
+            app('jwt')->token()->toString()
+        ));
+
+        $this->assertTrue(app('jwt')->validate(
+            app('jwt')->token()->toString()
+        ));
     }
 }
