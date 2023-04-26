@@ -3,6 +3,7 @@
 namespace Tests\Feature\Http\Middleware;
 
 use App\Http\Middleware\EnsureJwtTokenIsValid;
+use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Foundation\Testing\WithFaker;
 use Illuminate\Http\Request;
@@ -11,6 +12,8 @@ use Tests\TestCase;
 
 class EnsureJwtTokenIsValidTest extends TestCase
 {
+    use RefreshDatabase;
+
     public function test_the_request_is_forbidden_if_it_has_no_bearer_token()
     {
         $this->assertSame(403, $this->callMiddleware()->status());
@@ -35,6 +38,25 @@ class EnsureJwtTokenIsValidTest extends TestCase
         ]);
 
         $this->assertSame(401, $this->callMiddleware($request)->status());
+    }
+
+    public function test_the_request_is_authorized_if_token_is_valid()
+    {
+        $user = User::factory()->create();
+
+        $request = new Request();
+        $request->headers->add([
+            'Authorization' => 'Bearer '.app('jwt')
+                ->claimWith('user_uuid', $user->uuid)
+                ->token()
+                ->toString()
+        ]);
+
+        $this->assertSame(
+            200, $this->callMiddleware($request)->getStatusCode()
+        );
+
+        $this->assertSame($user->uuid, auth()->user()->uuid);
     }
 
     private function callMiddleware(Request $request = null): Response
