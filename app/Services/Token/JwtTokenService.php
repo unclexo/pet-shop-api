@@ -23,12 +23,6 @@ use Lcobucci\JWT\Validation\Constraint\SignedWith;
 
 class JwtTokenService implements Tokenable
 {
-    private string $issuedBy;
-
-    private array $withClaim = [];
-
-    private DateTimeImmutable $expiresAt;
-
     private Signer $signer;
 
     private Key $privateSigningKey;
@@ -36,8 +30,6 @@ class JwtTokenService implements Tokenable
     private Key $verificationKey;
 
     private Configuration $configuration;
-
-    private array $validationConstraints = [];
 
     private static Key $publicSigningKey;
 
@@ -49,10 +41,10 @@ class JwtTokenService implements Tokenable
     }
 
     public function __construct(
-        string $issuedBy = null,
-        array $withClaim = [],
-        DateTimeImmutable $expiresAt = null,
-        array $validationConstraints = []
+        private ?string $issuedBy = null,
+        private array $withClaim = [],
+        private ?DateTimeImmutable $expiresAt = null,
+        private array $validationConstraints = []
     ) {
         $this->issuedBy = $issuedBy ?? config('app.url');
 
