@@ -4,6 +4,7 @@
 namespace App\Services\Token;
 
 
+use Carbon\CarbonImmutable;
 use DateTimeImmutable;
 use Lcobucci\JWT\Encoding\ChainedFormatter;
 use Lcobucci\JWT\Encoding\JoseEncoder;
@@ -12,9 +13,24 @@ use Lcobucci\JWT\Signer\Key\InMemory;
 use Lcobucci\JWT\Token;
 use Lcobucci\JWT\Token\Builder;
 use Lcobucci\JWT\Token\Parser;
+use Lcobucci\JWT\Validation\Constraint\IssuedBy;
+use Lcobucci\JWT\Validation\Constraint\SignedWith;
+use Lcobucci\JWT\Validation\Validator;
 
 class JwtTokenService implements Tokenable
 {
+    private string $issuedBy;
+
+    private array $withClaim = [];
+
+    private DateTimeImmutable $expiresAt;
+
+    public function __construct()
+    {
+        $this->issuedBy = 'http://example.com';
+        $this->withClaim = ['uid', 1];
+        $this->expiresAt = CarbonImmutable::now()->addHour(1);
+    }
 
     public function issuedBy(string $issuer): Tokenable
     {
@@ -40,9 +56,9 @@ class JwtTokenService implements Tokenable
         $now   = new DateTimeImmutable();
 
         return $tokenBuilder
-            ->issuedBy('http://example.com')
-            ->expiresAt($now->modify('+1 hour'))
-            ->withClaim('uid', 1)
+            ->issuedBy($this->issuedBy)
+            ->expiresAt($this->expiresAt)
+            ->withClaim($this->withClaim[0], $this->withClaim[1])
             ->getToken($algorithm, $signingKey);
     }
 
@@ -55,6 +71,20 @@ class JwtTokenService implements Tokenable
 
     public function validate(string $token): bool
     {
-        // TODO: Implement validate() method.
+        $parser = new Parser(new JoseEncoder());
+
+        $token = $parser->parse($token);
+
+        $validator = new Validator();
+
+        if ($token->isExpired(now())) {
+            return false;
+        }
+
+        if (! $validator->validate($token, new IssuedBy($this->issuedBy))) {
+            return false;
+        }
+
+        return true;
     }
 }

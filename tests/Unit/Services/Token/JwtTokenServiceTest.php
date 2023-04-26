@@ -27,4 +27,11 @@ class JwtTokenServiceTest extends TestCase
             app('jwt')->parse(app('jwt')->token()->toString())
         );
     }
+
+    public function test_it_can_validate_a_given_token()
+    {
+        $this->assertTrue(app('jwt')->validate(
+            app('jwt')->token()->toString()
+        ));
+    }
 }
