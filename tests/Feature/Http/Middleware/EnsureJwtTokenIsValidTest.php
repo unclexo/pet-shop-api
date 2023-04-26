@@ -20,4 +20,35 @@ class EnsureJwtTokenIsValidTest extends TestCase
 
         $this->assertSame(403, $response->status());
     }
+
+    public function test_the_request_is_unauthorized_if_token_is_invalid()
+    {
+        $request = new Request();
+
+        $request->headers->add([
+            'Authorization' => 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.'
+                . 'eyJzdWIiOiIxMjM0NTY3ODkwIn0.'
+                . '2gSBz9EOsQRN9I-3iSxJoFt7NtgV6Rm0IL6a8CAwl3Q'
+        ]);
+
+        $response = (new EnsureJwtTokenIsValid())->handle(
+            $request,
+            fn () => new Response()
+        );
+
+        $this->assertSame(401, $response->status());
+
+        $request = new Request();
+
+        $request->headers->add([
+            'Authorization' => 'Bearer an.invalid.token',
+        ]);
+
+        $response = (new EnsureJwtTokenIsValid())->handle(
+            $request,
+            fn () => new Response()
+        );
+
+        $this->assertSame(401, $response->status());
+    }
 }
