@@ -6,6 +6,7 @@ namespace App\Services\Token;
 
 use Carbon\CarbonImmutable;
 use DateTimeImmutable;
+use DomainException;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use InvalidArgumentException;
@@ -17,6 +18,7 @@ use Lcobucci\JWT\Signer\Key\InMemory;
 use Lcobucci\JWT\Signer\Rsa\Sha256;
 use Lcobucci\JWT\Token;
 use Lcobucci\JWT\Token\Parser;
+use Lcobucci\JWT\Validation\Constraint;
 use Lcobucci\JWT\Validation\Constraint\SignedWith;
 
 class JwtTokenService implements Tokenable
@@ -63,7 +65,9 @@ class JwtTokenService implements Tokenable
         $this->configuration = $this->configureDefaultConfiguration();
 
         if (count($validationConstraints) > 0) {
-            $this->validationConstraints = $validationConstraints;
+            $this->validateConstraintTypes(
+                $this->validationConstraints = $validationConstraints
+            );
         }
     }
 
@@ -91,6 +95,17 @@ class JwtTokenService implements Tokenable
         );
     }
 
+    private function validateConstraintTypes(array $constraints)
+    {
+        foreach($constraints as $constraint) {
+            if (! ($constraint instanceof Constraint)) {
+                throw new DomainException(
+                    "Invalid validation constraint configured."
+                );
+            }
+        }
+    }
+
     public function issuedBy(string $issuer): Tokenable
     {
         $this->issuedBy = $issuer;
@@ -114,7 +129,9 @@ class JwtTokenService implements Tokenable
 
     public function configureValidationConstraints(array $constraints): Tokenable
     {
-        $this->validationConstraints = $constraints;
+        $this->validateConstraintTypes(
+            $this->validationConstraints = $constraints
+        );
 
         return $this;
     }
