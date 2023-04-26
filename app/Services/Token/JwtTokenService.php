@@ -132,7 +132,7 @@ class JwtTokenService implements Tokenable
     {
         $tokenBuilder = $this->configuration->builder()
             ->issuedBy($this->issuedBy)
-            ->expiresAt($this->validateExpirationDateAndTime($this->expiresAt));
+            ->expiresAt($this->expiresAt);
 
         foreach ($this->withClaim as $key => $value) {
             if (! is_string($key) || ! $value) {
