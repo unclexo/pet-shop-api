@@ -60,6 +60,26 @@ class JwtTokenService implements Tokenable
 
         $this->expiresAt = $expiresAt ?? CarbonImmutable::now()->addHour(2);
 
+        $this->configuration = $this->configureDefaultConfiguration();
+
+        if (count($validationConstraints) > 0) {
+            $this->validationConstraints = $validationConstraints;
+        }
+    }
+
+    private function configureDefaultConfiguration()
+    {
+        $this->setDefaultSigningKeys();
+
+        return Configuration::forAsymmetricSigner(
+            $this->signer,
+            $this->privateSigningKey,
+            $this->verificationKey,
+        );
+    }
+
+    private function setDefaultSigningKeys()
+    {
         $this->signer = new Sha256();
 
         $this->privateSigningKey = InMemory::file(Storage::path(
@@ -69,16 +89,6 @@ class JwtTokenService implements Tokenable
         $this->verificationKey = InMemory::base64Encoded(
             substr(config('app.key'), 7)
         );
-
-        $this->configuration = Configuration::forAsymmetricSigner(
-            $this->signer,
-            $this->privateSigningKey,
-            $this->verificationKey,
-        );
-
-        if (count($validationConstraints) > 0) {
-            $this->validationConstraints = $validationConstraints;
-        }
     }
 
     public function issuedBy(string $issuer): Tokenable
