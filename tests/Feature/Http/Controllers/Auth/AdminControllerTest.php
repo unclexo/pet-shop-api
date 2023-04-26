@@ -73,4 +73,26 @@ class AdminControllerTest extends TestCase
 
         $this->assertDatabaseHas('users', ['is_admin' => 1]);
     }
+
+    public function test_an_admin_user_can_not_register_with_invalid_data()
+    {
+        $firstName = fake()->firstName;
+
+        $this->postJson(route('v1.admin.registration'), [
+            'first_name' => $firstName,
+            'last_name' => '',
+            'email' => fake()->unique()->safeEmail,
+            'password' => 'password',
+            'password_confirmation' => 'passwor',
+            'address' => fake()->address,
+            'phone_number' => fake()->phoneNumber,
+            'is_marketing' => 0,
+        ])
+        ->assertStatus(422)
+        ->assertJsonValidationErrors(['last_name', 'password', 'avatar']);
+
+        $this->assertDatabaseMissing(
+            'users', ['first_name' => $firstName]
+        );
+    }
 }
