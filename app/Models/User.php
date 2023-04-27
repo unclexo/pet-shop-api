@@ -7,9 +7,12 @@ use Carbon\CarbonImmutable;
 use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Illuminate\Support\Facades\DB;
 use Lcobucci\JWT\Token;
+use Throwable;
 
 class User extends Authenticatable
 {
@@ -71,9 +74,31 @@ class User extends Authenticatable
         );
     }
 
-    public function tokenize(): void
+    public function tokenize(string $title): void
     {
-        $this->attributes['token'] = $this->createToken()->toString();
+        $token = $this->createToken();
+        $claims = $token->claims();
+
+        try {
+            DB::beginTransaction();
+
+            JwtToken::where('user_uuid', $this->uuid)->delete();
+
+            $this->jwtToken()->create([
+                'unique_id' => $claims->get('unique_id'),
+                'token_title' => $title,
+                'expires_at' => $claims->get('exp'),
+                'last_used_at' => now(),
+            ]);
+
+            DB::commit();
+        } catch (Throwable $e) {
+            DB::rollBack();
+
+            abort(500);
+        }
+
+        $this->attributes['token'] = $token->toString();
     }
 
     public function createToken(): Token
@@ -85,5 +110,10 @@ class User extends Authenticatable
                 env('JWT_TOKEN_EXPIRATION_HOURS', 14)
             ))
             ->token();
+    }
+
+    public function jwtToken(): HasOne
+    {
+        return $this->hasOne(JwtToken::class, 'user_uuid', 'uuid');
     }
 }
