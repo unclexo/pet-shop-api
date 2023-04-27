@@ -5,8 +5,10 @@ namespace App\Http\Controllers\Auth;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Auth\LoginRequest;
 use App\Http\Requests\Auth\RegistrationRequest;
+use App\Http\Requests\Auth\UserListingRequest;
 use App\Http\Resources\ApiResource;
 use App\Models\User;
+use Illuminate\Http\Resources\Json\ResourceCollection;
 
 class AdminController extends Controller
 {
@@ -35,5 +37,17 @@ class AdminController extends Controller
         auth()->user()->jwtToken()->delete();
 
         return new ApiResource([]);
+    }
+
+    public function listUsers(UserListingRequest $request): ResourceCollection
+    {
+        $data = $request->getPaginationData();
+
+        $users = User::query()
+            ->nonAdminUsers()
+            ->orderBy($data->sortBy, $data->desc)
+            ->paginate($data->limit, '*', 'page', $data->page);
+
+        return ApiResource::collection($users);
     }
 }

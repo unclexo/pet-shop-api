@@ -3,12 +3,15 @@
 namespace App\Models;
 
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
+use App\Http\Requests\Auth\UserListingRequest;
 use Carbon\CarbonImmutable;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Foundation\Auth\User as Authenticatable;
+use Illuminate\Http\Resources\Json\PaginatedResourceResponse;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Support\Facades\DB;
 use Lcobucci\JWT\Token;
@@ -115,5 +118,10 @@ class User extends Authenticatable
     public function jwtToken(): HasOne
     {
         return $this->hasOne(JwtToken::class, 'user_uuid', 'uuid');
+    }
+
+    public function scopeNonAdminUsers(Builder $query): void
+    {
+        $query->where('is_admin', '!=', 1);
     }
 }

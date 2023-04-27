@@ -31,4 +31,7 @@ Route::prefix('v1/admin')
 
         Route::post('logout', 'logout')
             ->name('v1.admin.logout');
+
+        Route::get('user-listing', 'listUsers')
+            ->name('v1.admin.user_listing');
 });

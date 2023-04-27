@@ -117,6 +117,32 @@ class AdminControllerTest extends TestCase
             ->assertStatus(401);
     }
 
+    public function test_listing_all_non_admin_users()
+    {
+        User::factory(11)->create();
+
+        $user = User::find(1);
+        $user->is_admin = 1;
+        $user->save();
+
+        $user->tokenize('User creation');
+
+        $this
+            ->withHeaders(['Authorization' => 'Bearer '.$user->token])
+            ->getJson(route('v1.admin.user_listing'))
+            ->assertStatus(200)
+            ->assertJsonCount(10, 'data');
+
+        $this
+            ->withHeaders(['Authorization' => 'Bearer '.$user->token])
+            ->getJson(route('v1.admin.user_listing', [
+                'page' => 4,
+                'limit' => 3
+            ]))
+            ->assertStatus(200)
+            ->assertJsonCount(1, 'data');
+    }
+
     private function authorizationHeader()
     {
         $user = User::factory()->create([
