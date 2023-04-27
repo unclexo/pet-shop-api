@@ -22,7 +22,7 @@ class UserFactory extends Factory
             'last_name' => fake()->lastName,
             'email' => fake()->unique()->safeEmail(),
             'email_verified_at' => now(),
-            'password' => '$2y$10$esI4YUTT/vDcn4dH/hMiIO5eCWN/6my35HV.dixJeoMy9TQGTnlXS', // userpassword
+            'password' => 'userpassword', // userpassword
             'avatar' => fake()->uuid,
             'address' => fake()->address,
             'phone_number' => fake()->phoneNumber,
