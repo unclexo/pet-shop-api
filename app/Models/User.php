@@ -9,6 +9,7 @@ use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Lcobucci\JWT\Token;
 
 class User extends Authenticatable
 {
@@ -68,5 +69,21 @@ class User extends Authenticatable
         return new Attribute(
             set: fn (string $password) => bcrypt($password)
         );
+    }
+
+    public function tokenize(): void
+    {
+        $this->attributes['token'] = $this->createToken()->toString();
+    }
+
+    public function createToken(): Token
+    {
+        return app('jwt')
+            ->issuedBy(config('app.url'))
+            ->claimWith('user_uuid', $this->uuid)
+            ->expiresAt(CarbonImmutable::now()->addHours(
+                env('JWT_TOKEN_EXPIRATION_HOURS', 14)
+            ))
+            ->token();
     }
 }
