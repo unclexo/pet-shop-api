@@ -100,6 +100,16 @@ class AdminControllerTest extends TestCase
         );
     }
 
+    public function test_a_token_can_not_be_used_to_authorize_after_logout()
+    {
+        $response = $this
+            ->withHeaders($this->authorizationHeader())
+            ->postJson(route('v1.admin.logout'));
+
+        $response->assertStatus(200);
+        $response->assertJsonStructure(['data' => []]);
+    }
+
     private function authorizationHeader()
     {
         $user = User::factory()->create([

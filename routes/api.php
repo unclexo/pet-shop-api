@@ -28,4 +28,7 @@ Route::prefix('v1/admin')
 
         Route::post('create', 'register')
             ->name('v1.admin.registration');
+
+        Route::post('logout', 'logout')
+            ->name('v1.admin.logout');
 });

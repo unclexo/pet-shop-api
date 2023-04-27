@@ -27,4 +27,11 @@ class AdminController extends Controller
 
         return new ApiResource($user);
     }
+
+    public function logout(): ApiResource
+    {
+        auth()->user()->jwtToken()->delete();
+
+        return new ApiResource([]);
+    }
 }
