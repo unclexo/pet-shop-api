@@ -13,11 +13,11 @@ class UserSeeder extends Seeder
      */
     public function run(): void
     {
-        $users = User::factory(100)->create();
-
-        $user = User::find($users->random()->uuid);
+        User::factory(100)->create();
+        
+        $user = User::find(31);
         $user->email = 'admin@buckhill.co.uk';
-        $user->password = bcrypt('admin');
+        $user->password = 'admin';
         $user->is_admin = 1;
         $user->save();
     }
