@@ -13,7 +13,8 @@ class AdminController extends Controller
     public function login(LoginRequest $request): ApiResource
     {
         $user = $request->authenticate();
-        $user->token = app('jwt')->token()->toString();
+
+        $user->tokenize();
 
         return new ApiResource($user);
     }
@@ -21,7 +22,8 @@ class AdminController extends Controller
     public function register(RegistrationRequest $request): ApiResource
     {
         $user = User::create(array_merge($request->validated(), ['is_admin' => 1]));
-        $user->token = app('jwt')->token()->toString();
+
+        $user->tokenize();
 
         return new ApiResource($user);
     }
