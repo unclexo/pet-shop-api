@@ -70,13 +70,11 @@ class EnsureJwtTokenIsValidTest extends TestCase
     public function test_the_request_is_authorized_if_token_is_valid()
     {
         $user = User::factory()->create();
+        $user->tokenize('User creation');
 
         $request = new Request();
         $request->headers->add([
-            'Authorization' => 'Bearer '.app('jwt')
-                ->claimWith('user_uuid', $user->uuid)
-                ->token()
-                ->toString()
+            'Authorization' => 'Bearer '.$user->token
         ]);
 
         $this->assertSame(

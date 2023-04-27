@@ -2,6 +2,7 @@
 
 namespace App\Http\Middleware;
 
+use App\Models\JwtToken;
 use App\Models\User;
 use Carbon\CarbonImmutable;
 use Closure;
@@ -46,6 +47,10 @@ class EnsureJwtTokenIsValid
                     $parsedToken->claims()->get('user_uuid')
                 )->first()
             ) {
+                return \response(null, 401);
+            }
+
+            if (! ($user->jwtToken instanceof JwtToken)) {
                 return \response(null, 401);
             }
 
