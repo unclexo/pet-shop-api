@@ -54,22 +54,24 @@ class AdminControllerTest extends TestCase
 
     public function test_an_admin_user_can_register_with_valid_data()
     {
-        $this->postJson(route('v1.admin.registration'), [
-            'first_name' => fake()->firstName,
-            'last_name' => fake()->lastName,
-            'email' => fake()->unique()->safeEmail,
-            'password' => 'password',
-            'password_confirmation' => 'password',
-            'avatar' => fake()->uuid,
-            'address' => fake()->address,
-            'phone_number' => fake()->phoneNumber,
-            'is_marketing' => 0,
-        ])
-        ->assertStatus(200)
-        ->assertJsonPath(
-            'data.token',
-            fn (string $token) => str_starts_with($token, 'eyJ')
-        );
+        $this
+            ->withHeaders($this->authorizationHeader())
+            ->postJson(route('v1.admin.registration'), [
+                'first_name' => fake()->firstName,
+                'last_name' => fake()->lastName,
+                'email' => fake()->unique()->safeEmail,
+                'password' => 'password',
+                'password_confirmation' => 'password',
+                'avatar' => fake()->uuid,
+                'address' => fake()->address,
+                'phone_number' => fake()->phoneNumber,
+                'is_marketing' => 0,
+            ])
+            ->assertStatus(200)
+            ->assertJsonPath(
+                'data.token',
+                fn (string $token) => str_starts_with($token, 'eyJ')
+            );
 
         $this->assertDatabaseHas('users', ['is_admin' => 1]);
     }
@@ -78,21 +80,41 @@ class AdminControllerTest extends TestCase
     {
         $firstName = fake()->firstName;
 
-        $this->postJson(route('v1.admin.registration'), [
-            'first_name' => $firstName,
-            'last_name' => '',
-            'email' => fake()->unique()->safeEmail,
-            'password' => 'password',
-            'password_confirmation' => 'passwor',
-            'address' => fake()->address,
-            'phone_number' => fake()->phoneNumber,
-            'is_marketing' => 0,
-        ])
-        ->assertStatus(422)
-        ->assertJsonValidationErrors(['last_name', 'password', 'avatar']);
+        $this
+            ->withHeaders($this->authorizationHeader())
+            ->postJson(route('v1.admin.registration'), [
+                'first_name' => $firstName,
+                'last_name' => '',
+                'email' => fake()->unique()->safeEmail,
+                'password' => 'password',
+                'password_confirmation' => 'passwor',
+                'address' => fake()->address,
+                'phone_number' => fake()->phoneNumber,
+                'is_marketing' => 0,
+            ])
+            ->assertStatus(422)
+            ->assertJsonValidationErrors(['last_name', 'password', 'avatar']);
 
         $this->assertDatabaseMissing(
             'users', ['first_name' => $firstName]
         );
+    }
+
+    private function authorizationHeader()
+    {
+        $user = User::factory()->create([
+            'email' => 'admin@buckhill.co.uk',
+            'password' => 'admin',
+        ]);
+
+        $token = app('jwt')
+            ->issuedBy(config('app.url'))
+            ->claimWith('user_uuid', $user->uuid)
+            ->token()
+            ->toString();
+
+        return [
+            'Authorization' => 'Bearer '.$token,
+        ];
     }
 }
