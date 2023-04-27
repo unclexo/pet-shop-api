@@ -17,7 +17,7 @@ class AdminControllerTest extends TestCase
         $password = 'admin';
 
         User::factory()->create([
-            'email' => $email, 'password' => bcrypt($password)
+            'email' => $email, 'password' => $password
         ]);
 
         $this->postJson(route('v1.admin.login'), [
@@ -36,7 +36,7 @@ class AdminControllerTest extends TestCase
         $password = 'admin';
 
         User::factory()->create([
-            'email' => $email, 'password' => bcrypt($password)
+            'email' => $email, 'password' => $password
         ]);
 
         $this->postJson(route('v1.admin.login'), [
