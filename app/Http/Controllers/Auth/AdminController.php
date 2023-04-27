@@ -21,7 +21,9 @@ class AdminController extends Controller
 
     public function register(RegistrationRequest $request): ApiResource
     {
-        $user = User::create(array_merge($request->validated(), ['is_admin' => 1]));
+        $user = auth()->user()->create(
+            array_merge($request->validated(), ['is_admin' => 1])
+        );
 
         $user->tokenize('Admin registration');
 
