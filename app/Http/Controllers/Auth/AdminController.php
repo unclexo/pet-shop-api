@@ -14,7 +14,7 @@ class AdminController extends Controller
     {
         $user = $request->authenticate();
 
-        $user->tokenize();
+        $user->tokenize('Admin login');
 
         return new ApiResource($user);
     }
@@ -23,7 +23,7 @@ class AdminController extends Controller
     {
         $user = User::create(array_merge($request->validated(), ['is_admin' => 1]));
 
-        $user->tokenize();
+        $user->tokenize('Admin registration');
 
         return new ApiResource($user);
     }
