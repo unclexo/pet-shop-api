@@ -102,12 +102,19 @@ class AdminControllerTest extends TestCase
 
     public function test_a_token_can_not_be_used_to_authorize_after_logout()
     {
-        $response = $this
-            ->withHeaders($this->authorizationHeader())
-            ->postJson(route('v1.admin.logout'));
+        $user = User::factory()->create();
+        $user->tokenize('User creation');
 
-        $response->assertStatus(200);
-        $response->assertJsonStructure(['data' => []]);
+        $this
+            ->withHeaders(['Authorization' => 'Bearer '.$user->token])
+            ->postJson(route('v1.admin.logout'))
+            ->assertStatus(200)
+            ->assertJsonStructure(['data' => []]);
+
+        $this
+            ->withHeaders(['Authorization' => 'Bearer '.$user->token])
+            ->postJson(route('v1.admin.logout'))
+            ->assertStatus(401);
     }
 
     private function authorizationHeader()
@@ -117,14 +124,10 @@ class AdminControllerTest extends TestCase
             'password' => 'admin',
         ]);
 
-        $token = app('jwt')
-            ->issuedBy(config('app.url'))
-            ->claimWith('user_uuid', $user->uuid)
-            ->token()
-            ->toString();
+        $user->tokenize('User creation');
 
         return [
-            'Authorization' => 'Bearer '.$token,
+            'Authorization' => 'Bearer '.$user->token,
         ];
     }
 }
