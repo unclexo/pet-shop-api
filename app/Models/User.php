@@ -124,4 +124,9 @@ class User extends Authenticatable
     {
         $query->where('is_admin', '!=', 1);
     }
+
+    public function isAdmin(): bool
+    {
+        return $this->is_admin === 1;
+    }
 }
