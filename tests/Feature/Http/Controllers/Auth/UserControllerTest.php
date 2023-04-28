@@ -110,4 +110,43 @@ class UserControllerTest extends TestCase
             ->postJson(route('v1.user.logout'))
             ->assertStatus(401);
     }
+
+    public function test_a_user_can_be_updated()
+    {
+        $data = $this->userData();
+
+        $user = User::factory()->create();
+        $user->tokenize('User creation');
+
+        $this
+            ->withHeaders(['Authorization' => 'Bearer '.$user->token])
+            ->putJson(route('v1.user.edit', ['uuid' => $user->uuid]), [
+                'first_name' => $data->firstName,
+                'last_name' => $data->lastName,
+                'email' => $data->email,
+                'password' => $data->password,
+                'password_confirmation' => $data->passwordConfirmation,
+                'address' => $data->address,
+                'phone_number' => $data->phoneNumber,
+            ])->assertStatus(200);
+
+        $this->assertDatabaseHas('users', [
+            'first_name' => $data->firstName,
+            'email' => $data->email,
+        ]);
+    }
+
+    private function userData()
+    {
+        return (object) [
+            'firstName' => 'first_name',
+            'lastName' => 'last_name',
+            'email' => 'auniqueemail@example.com',
+            'password' => 'password',
+            'passwordConfirmation' => 'password',
+            'address' => 'address',
+            'phoneNumber' => '+8801712345678',
+            'isMarketing' => 0,
+        ];
+    }
 }

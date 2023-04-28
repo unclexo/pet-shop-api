@@ -29,6 +29,13 @@ class UserController extends Controller
         return new ApiResource($user);
     }
 
+    public function edit(RegistrationRequest $request, User $uuid)
+    {
+        $uuid->update($request->validated());
+
+        return new ApiResource($uuid);
+    }
+
     public function logout(): ApiResource
     {
         auth()->user()?->jwtToken()?->delete();

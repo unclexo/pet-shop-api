@@ -48,6 +48,9 @@ Route::prefix('v1')->middleware(['jwt'])->group(function () {
 
             Route::post('logout', 'logout')
                 ->name('v1.user.logout');
+
+            Route::put('edit/{uuid}', 'edit')
+                ->name('v1.user.edit');
         });
 });
 
