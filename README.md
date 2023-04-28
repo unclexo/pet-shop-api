@@ -26,12 +26,17 @@ mkdir -p ./storage/app/token
 
 openssl genrsa -out ./storage/app/token/jwt-token-private.key
 
-openssl rsa -in ./storage/app/token/jwt-token-private.key \ 
--pubout -out ./storage/app/token/jwt-token-public.key
+openssl rsa -in ./storage/app/token/jwt-token-private.key -pubout -out ./storage/app/token/jwt-token-public.key
 ``` 
 
-Set environment variables for database, and private and public key files for 
-JWT token:
+Set environment variables for database, and private and public key files.
+
+```bash
+cp .env.example .env
+```
+
+Open the `.env` file on you editor and set these following environment variables:
+
 ```bash
 DB_CONNECTION=mysql
 DB_HOST=xo-pet-api-db
@@ -60,14 +65,20 @@ To make sure containers are running well, run the following command:
 docker container list
 ```
 
-Once the containers are up and running you can install laravel dependencies. 
+Once the containers are up and running you can install php dependencies. 
 To do that run the command below:
 
 ```bash
 docker exec -it xo-pet-api-app composer install
 ```
 
-When laravel dependencies are installed, you can make migrations of db tables 
+And generate application key by the following command:
+
+```bash
+php artisan key:generate
+```
+
+When php dependencies are installed, you can make migrations of db tables 
 and seed tables with dummy data using the following command. 
 
 ```bash
