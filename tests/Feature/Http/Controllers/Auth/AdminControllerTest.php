@@ -102,7 +102,7 @@ class AdminControllerTest extends TestCase
 
     public function test_a_token_can_not_be_used_to_authorize_after_logout()
     {
-        $user = User::factory()->create();
+        $user = User::factory()->create(['is_admin' => 1]);
         $user->tokenize('User creation');
 
         $this

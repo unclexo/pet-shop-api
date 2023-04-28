@@ -26,14 +26,16 @@ Route::prefix('v1')->middleware(['jwt'])->group(function () {
                 ->withoutMiddleware('jwt')
                 ->name('v1.admin.login');
 
-            Route::post('create', 'register')
-                ->name('v1.admin.registration');
+            Route::middleware('can:manageAdmin,App\Models\User')->group(function () {
+                Route::post('create', 'register')
+                    ->name('v1.admin.registration');
 
-            Route::post('logout', 'logout')
-                ->name('v1.admin.logout');
+                Route::post('logout', 'logout')
+                    ->name('v1.admin.logout');
 
-            Route::get('user-listing', 'listUsers')
-                ->name('v1.admin.user_listing');
+                Route::get('user-listing', 'listUsers')
+                    ->name('v1.admin.user_listing');
+            });
         });
 
     Route::prefix('user')

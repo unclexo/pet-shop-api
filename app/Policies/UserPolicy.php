@@ -8,6 +8,14 @@ use Illuminate\Auth\Access\Response;
 class UserPolicy
 {
     /**
+     * Determine whether the user can manage admin area.
+     */
+    public function manageAdmin(User $user): bool
+    {
+        return $user->isAdmin();
+    }
+
+    /**
      * Determine whether the user can update the model.
      */
     public function update(User $user, User $model): bool
