@@ -24,7 +24,7 @@ trait NeedsCustomResponse
         mixed $data = [],
         string $error = null,
         mixed $errors = []
-    ): JsonResponse {
+    ): void {
         throw new HttpResponseException($this->customJsonResponse(
             $statusCode,
             $data,
