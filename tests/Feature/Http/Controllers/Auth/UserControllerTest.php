@@ -33,4 +33,26 @@ class UserControllerTest extends TestCase
 
         $this->assertDatabaseHas('users', ['email' => $email]);
     }
+
+    public function test_a_user_can_not_be_registered_with_invalid_data()
+    {
+        $firstName = fake()->firstName;
+
+        $this->postJson(route('v1.user.registration'), [
+                'first_name' => $firstName,
+                'last_name' => '',
+                'email' => fake()->unique()->safeEmail,
+                'password' => 'password',
+                'password_confirmation' => 'passwor',
+                'address' => fake()->address,
+                'phone_number' => fake()->phoneNumber,
+                'is_marketing' => 0,
+            ])
+            ->assertStatus(422)
+            ->assertJsonValidationErrors(['last_name', 'password',]);
+
+        $this->assertDatabaseMissing(
+            'users', ['first_name' => $firstName]
+        );
+    }
 }
