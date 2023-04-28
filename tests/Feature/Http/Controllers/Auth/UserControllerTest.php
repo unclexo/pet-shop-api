@@ -14,8 +14,6 @@ class UserControllerTest extends TestCase
 
     public function test_a_user_can_be_registered_with_valid_data()
     {
-        $this->withoutExceptionHandling();
-
         $email = fake()->unique()->safeEmail;
 
         $this->postJson(route('v1.user.registration'), [
@@ -131,6 +129,33 @@ class UserControllerTest extends TestCase
             ])->assertStatus(200);
 
         $this->assertDatabaseHas('users', [
+            'first_name' => $data->firstName,
+            'email' => $data->email,
+        ]);
+    }
+
+    public function test_a_user_can_not_update_other_users()
+    {
+        $data = $this->userData();
+
+        $user1 = User::factory()->create();
+        $user1->tokenize('User creation');
+
+        $user2 = User::factory()->create();
+
+        $this
+            ->withHeaders(['Authorization' => 'Bearer '.$user1->token])
+            ->putJson(route('v1.user.edit', ['uuid' => $user2->uuid]), [
+                'first_name' => $data->firstName,
+                'last_name' => $data->lastName,
+                'email' => $data->email,
+                'password' => $data->password,
+                'password_confirmation' => $data->passwordConfirmation,
+                'address' => $data->address,
+                'phone_number' => $data->phoneNumber,
+            ])->assertStatus(403);
+
+        $this->assertDatabaseMissing('users', [
             'first_name' => $data->firstName,
             'email' => $data->email,
         ]);

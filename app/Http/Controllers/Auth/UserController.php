@@ -31,6 +31,8 @@ class UserController extends Controller
 
     public function edit(RegistrationRequest $request, User $uuid): ApiResource
     {
+        $this->authorize('update', $uuid);
+
         $uuid->update($request->validated());
 
         return new ApiResource($uuid);
