@@ -61,6 +61,14 @@ class User extends Authenticatable
     ];
 
     /**
+     * Get the route key for the model.
+     */
+    public function getRouteKeyName(): string
+    {
+        return 'uuid';
+    }
+
+    /**
      * Get the columns that should receive a unique identifier.
      *
      * @return array
