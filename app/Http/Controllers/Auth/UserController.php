@@ -11,7 +11,7 @@ use App\Models\User;
 
 class UserController extends Controller
 {
-    public function login(LoginRequest $request)
+    public function login(LoginRequest $request): ApiResource
     {
         $user = $request->authenticate();
 
@@ -20,7 +20,7 @@ class UserController extends Controller
         return new ApiResource($user);
     }
 
-    public function register(RegistrationRequest $request)
+    public function register(RegistrationRequest $request): ApiResource
     {
         $user = User::create($request->validated());
 
@@ -29,7 +29,7 @@ class UserController extends Controller
         return new ApiResource($user);
     }
 
-    public function edit(RegistrationRequest $request, User $uuid)
+    public function edit(RegistrationRequest $request, User $uuid): ApiResource
     {
         $uuid->update($request->validated());
 
