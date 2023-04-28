@@ -26,7 +26,7 @@ class RegistrationRequest extends FormRequest
             'first_name' => ['required', 'string', 'max:30'],
             'last_name' => ['required', 'string', 'max:30'],
             'email' => ['required', 'string', 'email', 'max:100', 'unique:users,email'],
-            'password' => ['required', 'string', 'confirmed'],
+            'password' => ['required', 'string', 'confirmed', 'min:8'],
             'password_confirmation' => ['required', 'string'],
             'avatar' => ['string', 'uuid', Rule::requiredIf(fn () => (bool) $this->user()?->isAdmin())],
             'address' => ['required', 'string'],
