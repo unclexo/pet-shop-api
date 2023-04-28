@@ -93,4 +93,21 @@ class UserControllerTest extends TestCase
             'email' => 'invalid@example.com', 'password' => '123'
         ])->assertStatus(422)->assertJsonValidationErrors(['email']);
     }
+
+    public function test_a_token_is_not_allowed_for_authorization_after_logout()
+    {
+        $user = User::factory()->create();
+        $user->tokenize('User creation');
+
+        $this
+            ->withHeaders(['Authorization' => 'Bearer '.$user->token])
+            ->postJson(route('v1.user.logout'))
+            ->assertStatus(200)
+            ->assertJsonStructure(['data' => []]);
+
+        $this
+            ->withHeaders(['Authorization' => 'Bearer '.$user->token])
+            ->postJson(route('v1.user.logout'))
+            ->assertStatus(401);
+    }
 }

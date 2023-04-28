@@ -45,6 +45,9 @@ Route::prefix('v1')->middleware(['jwt'])->group(function () {
             Route::post('create', 'register')
                 ->withoutMiddleware('jwt')
                 ->name('v1.user.registration');
+
+            Route::post('logout', 'logout')
+                ->name('v1.user.logout');
         });
 });
 
