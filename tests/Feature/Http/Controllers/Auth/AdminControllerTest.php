@@ -148,6 +148,7 @@ class AdminControllerTest extends TestCase
         $user = User::factory()->create([
             'email' => 'admin@buckhill.co.uk',
             'password' => 'admin',
+            'is_admin' => 1,
         ]);
 
         $user->tokenize('User creation');
