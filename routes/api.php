@@ -38,6 +38,10 @@ Route::prefix('v1')->middleware(['jwt'])->group(function () {
 
     Route::prefix('user')
         ->controller(UserController::class)->group(function () {
+            Route::post('login', 'login')
+                ->withoutMiddleware('jwt')
+                ->name('v1.user.login');
+
             Route::post('create', 'register')
                 ->withoutMiddleware('jwt')
                 ->name('v1.user.registration');

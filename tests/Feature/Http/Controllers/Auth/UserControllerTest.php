@@ -3,6 +3,7 @@
 namespace Tests\Feature\Http\Controllers\Auth;
 
 
+use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Foundation\Testing\WithFaker;
 use Tests\TestCase;
@@ -53,6 +54,23 @@ class UserControllerTest extends TestCase
 
         $this->assertDatabaseMissing(
             'users', ['first_name' => $firstName]
+        );
+    }
+
+    public function test_it_can_provide_jwt_token_after_successful_login()
+    {
+        $email = 'user@example.com';
+        $password = 'userpassword';
+
+        User::factory()->create([
+            'email' => $email, 'password' => $password
+        ]);
+
+        $this->postJson(route('v1.user.login'), [
+            'email' => $email, 'password' => $password
+        ])->assertStatus(200)->assertJsonPath(
+            'data.token',
+            fn (string $token) => str($token)->startsWith('eyJ')
         );
     }
 }
