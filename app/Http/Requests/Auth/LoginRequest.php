@@ -4,12 +4,14 @@ namespace App\Http\Requests\Auth;
 
 
 use App\Models\User;
+use App\Traits\NeedsCustomResponse;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Support\Facades\Hash;
-use Illuminate\Validation\ValidationException;
 
 class LoginRequest extends FormRequest
 {
+    use NeedsCustomResponse;
+
     /**
      * Determine if the user is authorized to make this request.
      */
@@ -36,18 +38,18 @@ class LoginRequest extends FormRequest
         $email = $this->input('email');
 
         if (! $user = User::where('email', $email)->first()) {
-            throw ValidationException::withMessages([
-                'email' => __("auth.failed")
-            ]);
+            $this->throwHttpResponseException(
+                errors: ['email' => __('auth.failed')],
+            );
         }
 
         if (! Hash::check(
             $password = $this->input('password'),
             $user->password)
         ) {
-            throw ValidationException::withMessages([
-                'email' => __("auth.failed")
-            ]);
+            $this->throwHttpResponseException(
+                errors: ['email' => __('auth.failed')],
+            );
         }
 
         if (Hash::needsRehash($user->password)) {
