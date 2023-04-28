@@ -6,42 +6,45 @@ namespace App\Http\Controllers\Auth;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Auth\LoginRequest;
 use App\Http\Requests\Auth\RegistrationRequest;
-use App\Http\Resources\ApiResource;
 use App\Models\User;
+use App\Traits\NeedsCustomResponse;
+use Illuminate\Http\JsonResponse;
 
 class UserController extends Controller
 {
-    public function login(LoginRequest $request): ApiResource
+    use NeedsCustomResponse;
+
+    public function login(LoginRequest $request): JsonResponse
     {
         $user = $request->authenticate();
 
         $user->tokenize('User login');
 
-        return new ApiResource($user);
+        return $this->customJsonResponse(data: $user);
     }
 
-    public function register(RegistrationRequest $request): ApiResource
+    public function register(RegistrationRequest $request): JsonResponse
     {
         $user = User::create($request->validated());
 
         $user->tokenize('User registration');
 
-        return new ApiResource($user);
+        return $this->customJsonResponse(data: $user);
     }
 
-    public function edit(RegistrationRequest $request, User $uuid): ApiResource
+    public function edit(RegistrationRequest $request, User $uuid): JsonResponse
     {
         $this->authorize('update', $uuid);
 
         $uuid->update($request->validated());
 
-        return new ApiResource($uuid);
+        return $this->customJsonResponse(data: $uuid);
     }
 
-    public function logout(): ApiResource
+    public function logout(): JsonResponse
     {
         auth()->user()?->jwtToken()?->delete();
 
-        return new ApiResource([]);
+       return $this->customJsonResponse();
     }
 }

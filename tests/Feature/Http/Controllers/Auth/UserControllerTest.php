@@ -25,7 +25,7 @@ class UserControllerTest extends TestCase
                 'address' => fake()->address,
                 'phone_number' => fake()->phoneNumber,
                 'is_marketing' => 0,
-        ])->assertStatus(201)->assertJsonPath(
+        ])->assertStatus(200)->assertJsonPath(
             'data.token',
             fn (string $token) => str($token)->contains('eyJ')
         );
