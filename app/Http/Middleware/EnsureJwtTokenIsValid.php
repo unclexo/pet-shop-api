@@ -4,6 +4,7 @@ namespace App\Http\Middleware;
 
 use App\Models\JwtToken;
 use App\Models\User;
+use App\Traits\NeedsCustomResponse;
 use Carbon\CarbonImmutable;
 use Closure;
 use Illuminate\Http\Request;
@@ -13,6 +14,8 @@ use Throwable;
 
 class EnsureJwtTokenIsValid
 {
+    use NeedsCustomResponse;
+
     /**
      * Handle an incoming request.
      *
@@ -21,25 +24,33 @@ class EnsureJwtTokenIsValid
     public function handle(Request $request, Closure $next): Response
     {
         if (! $token = $request->bearerToken()) {
-            return \response(null, 403);
+            $this->throwHttpResponseException(
+                statusCode: Response::HTTP_FORBIDDEN,
+            );
         }
 
         try {
             $jwt = app('jwt');
 
             if (! $jwt->validate($token)) {
-                return \response(null, 401);
+                $this->throwHttpResponseException(
+                    statusCode: Response::HTTP_UNAUTHORIZED,
+                );
             }
 
             if (! ($parsedToken = $jwt->parse($token)) instanceof Token) {
-                return \response(null, 401);
+                $this->throwHttpResponseException(
+                    statusCode: Response::HTTP_UNAUTHORIZED,
+                );
             }
 
             if (
                 $parsedToken->isExpired(CarbonImmutable::now())
                 || ! $parsedToken->hasBeenIssuedBy(config('app.url'))
             ) {
-                return \response(null, 401);
+                $this->throwHttpResponseException(
+                    statusCode: Response::HTTP_UNAUTHORIZED,
+                );
             }
 
             if (! $user = User::where(
@@ -47,16 +58,22 @@ class EnsureJwtTokenIsValid
                     $parsedToken->claims()->get('user_uuid')
                 )->first()
             ) {
-                return \response(null, 401);
+                $this->throwHttpResponseException(
+                    statusCode: Response::HTTP_UNAUTHORIZED,
+                );
             }
 
             if (! ($user->jwtToken instanceof JwtToken)) {
-                return \response(null, 401);
+                $this->throwHttpResponseException(
+                    statusCode: Response::HTTP_UNAUTHORIZED,
+                );
             }
 
             auth()->setUser($user);
         } catch (Throwable $e) {
-            return \response(null, 401);
+            $this->throwHttpResponseException(
+                statusCode: Response::HTTP_UNAUTHORIZED,
+            );
         }
 
         return $next($request);

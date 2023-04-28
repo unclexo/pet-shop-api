@@ -7,6 +7,8 @@ use App\Models\User;
 use Carbon\CarbonImmutable;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Foundation\Testing\WithFaker;
+use Illuminate\Http\Exceptions\HttpResponseException;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Tests\TestCase;
@@ -15,12 +17,14 @@ class EnsureJwtTokenIsValidTest extends TestCase
 {
     use RefreshDatabase;
 
-    public function test_the_request_is_forbidden_if_it_has_no_bearer_token()
+    public function test_it_raises_exception_if_request_has_no_bearer_token()
     {
-        $this->assertSame(403, $this->callMiddleware()->status());
+        $this->expectException(HttpResponseException::class);
+
+        $this->callMiddleware();
     }
 
-    public function test_the_request_is_unauthorized_if_token_is_invalid()
+    public function test_it_raises_exception_if_request_has_invalid_token()
     {
         $request = new Request();
 
@@ -30,31 +34,40 @@ class EnsureJwtTokenIsValidTest extends TestCase
                 . '2gSBz9EOsQRN9I-3iSxJoFt7NtgV6Rm0IL6a8CAwl3Q'
         ]);
 
-        $this->assertSame(401, $this->callMiddleware($request)->status());
+        $this->expectException(HttpResponseException::class);
 
+        $this->callMiddleware($request);
+    }
+
+    public function test_it_raises_exception_if_token_has_bad_format()
+    {
         $request = new Request();
 
         $request->headers->add([
             'Authorization' => 'Bearer an.invalid.token',
         ]);
 
-        $this->assertSame(401, $this->callMiddleware($request)->status());
+        $this->expectException(HttpResponseException::class);
+
+        $this->callMiddleware($request);
     }
 
-    public function test_the_request_is_unauthorized_if_the_token_is_stale()
+    public function test_it_raises_exception_if_request_has_an_expired_token()
     {
         $token = app('jwt')
-            ->expiresAt(CarbonImmutable::now()->subHour(1))
+            ->expiresAt(CarbonImmutable::now()->addHour(1))
             ->token()
             ->toString();
 
         $request = new Request();
         $request->headers->add(['Authorization' => 'Bearer '.$token]);
 
-        $this->assertSame(401, $this->callMiddleware($request)->status());
+        $this->expectException(HttpResponseException::class);
+
+        $this->callMiddleware($request);
     }
 
-    public function test_request_is_unauthorized_if_token_has_been_issued_by_others()
+    public function test_it_raises_exception_if_token_has_been_issued_by_others()
     {
         $token = app('jwt')
             ->issuedBy('test_issuer')
@@ -64,7 +77,9 @@ class EnsureJwtTokenIsValidTest extends TestCase
         $request = new Request();
         $request->headers->add(['Authorization' => 'Bearer '.$token]);
 
-        $this->assertSame(401, $this->callMiddleware($request)->status());
+        $this->expectException(HttpResponseException::class);
+
+        $this->callMiddleware($request);
     }
 
     public function test_the_request_is_authorized_if_token_is_valid()
