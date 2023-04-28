@@ -2,26 +2,30 @@
 
 namespace App\Http\Controllers\Auth;
 
+
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Auth\LoginRequest;
 use App\Http\Requests\Auth\RegistrationRequest;
 use App\Http\Requests\Auth\UserListingRequest;
-use App\Http\Resources\ApiResource;
 use App\Models\User;
-use Illuminate\Http\Resources\Json\ResourceCollection;
+use App\Traits\NeedsCustomResponse;
+use Illuminate\Contracts\Pagination\LengthAwarePaginator;
+use Illuminate\Http\JsonResponse;
 
 class AdminController extends Controller
 {
-    public function login(LoginRequest $request): ApiResource
+    use NeedsCustomResponse;
+
+    public function login(LoginRequest $request): JsonResponse
     {
         $user = $request->authenticate();
 
         $user->tokenize('Admin login');
 
-        return new ApiResource($user);
+        return $this->customJsonResponse(data: $user);
     }
 
-    public function register(RegistrationRequest $request): ApiResource
+    public function register(RegistrationRequest $request): JsonResponse
     {
         $user = auth()->user()->create(
             array_merge($request->validated(), ['is_admin' => 1])
@@ -29,25 +33,23 @@ class AdminController extends Controller
 
         $user->tokenize('Admin registration');
 
-        return new ApiResource($user);
+        return $this->customJsonResponse(data: $user);
     }
 
-    public function logout(): ApiResource
+    public function logout(): JsonResponse
     {
         auth()->user()->jwtToken()->delete();
 
-        return new ApiResource([]);
+        return $this->customJsonResponse();
     }
 
-    public function listUsers(UserListingRequest $request): ResourceCollection
+    public function listUsers(UserListingRequest $request): LengthAwarePaginator
     {
         $data = $request->getPaginationData();
 
-        $users = User::query()
+        return User::query()
             ->nonAdminUsers()
             ->orderBy($data->sortBy, $data->desc)
             ->paginate($data->limit, '*', 'page', $data->page);
-
-        return ApiResource::collection($users);
     }
 }

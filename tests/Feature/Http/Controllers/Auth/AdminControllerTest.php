@@ -67,7 +67,7 @@ class AdminControllerTest extends TestCase
                 'phone_number' => fake()->phoneNumber,
                 'is_marketing' => 0,
             ])
-            ->assertStatus(201)
+            ->assertStatus(200)
             ->assertJsonPath(
                 'data.token',
                 fn (string $token) => str_starts_with($token, 'eyJ')
