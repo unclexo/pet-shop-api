@@ -34,7 +34,7 @@ class RegistrationRequest extends FormRequest
             'avatar' => ['string', 'uuid', Rule::requiredIf(fn () => (bool) $this->user()?->isAdmin())],
             'address' => ['required', 'string'],
             'phone_number' => ['required', 'string', 'max:20'],
-            'is_marketing' => ['nullable', 'boolean'],
+            'is_marketing' => ['sometimes', 'required', 'boolean'],
         ];
     }
 }
