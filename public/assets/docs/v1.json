@@ -214,7 +214,11 @@
                         "required": false,
                         "in": "query",
                         "schema": {
-                            "type": "boolean"
+                            "type": "string",
+                            "enum": [
+                                "0",
+                                "1"
+                            ]
                         }
                     }
                 ],
