@@ -1,7 +1,7 @@
 <?php
 
 use App\Http\Controllers\Auth\AdminController;
-use Illuminate\Http\Request;
+use App\Http\Controllers\Auth\UserController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -19,19 +19,28 @@ use Illuminate\Support\Facades\Route;
 //     return $request->user();
 // });
 
-Route::prefix('v1/admin')
-    ->middleware(['jwt'])
-    ->controller(AdminController::class)->group(function () {
-        Route::post('login', 'login')
-            ->withoutMiddleware('jwt')
-            ->name('v1.admin.login');
+Route::prefix('v1')->middleware(['jwt'])->group(function () {
+    Route::prefix('admin')
+        ->controller(AdminController::class)->group(function () {
+            Route::post('login', 'login')
+                ->withoutMiddleware('jwt')
+                ->name('v1.admin.login');
 
-        Route::post('create', 'register')
-            ->name('v1.admin.registration');
+            Route::post('create', 'register')
+                ->name('v1.admin.registration');
 
-        Route::post('logout', 'logout')
-            ->name('v1.admin.logout');
+            Route::post('logout', 'logout')
+                ->name('v1.admin.logout');
 
-        Route::get('user-listing', 'listUsers')
-            ->name('v1.admin.user_listing');
+            Route::get('user-listing', 'listUsers')
+                ->name('v1.admin.user_listing');
+        });
+
+    Route::prefix('user')
+        ->controller(UserController::class)->group(function () {
+            Route::post('create', 'register')
+                ->withoutMiddleware('jwt')
+                ->name('v1.user.registration');
+        });
 });
+
