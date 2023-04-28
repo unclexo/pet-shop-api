@@ -73,4 +73,24 @@ class UserControllerTest extends TestCase
             fn (string $token) => str($token)->startsWith('eyJ')
         );
     }
+
+    public function test_a_user_can_not_login_with_invalid_credentials()
+    {
+        $email = 'user@example.com';
+        $password = 'userpassword';
+
+        User::factory()->create([
+            'email' => $email, 'password' => $password
+        ]);
+
+        $this->postJson(route('v1.user.login'), [
+            'email' => '', 'password' => ''
+        ])->assertStatus(422)->assertJsonValidationErrors([
+            'email', 'password'
+        ]);
+
+        $this->postJson(route('v1.user.login'), [
+            'email' => 'invalid@example.com', 'password' => '123'
+        ])->assertStatus(422)->assertJsonValidationErrors(['email']);
+    }
 }
